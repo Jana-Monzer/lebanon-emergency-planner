@@ -1,0 +1,117 @@
+<!-- =========================
+     CHAT LAYOUT
+========================= -->
+<div class="chat-layout">
+  <!-- HISTORY -->
+  <div class="chat-sidebar">
+    <button class="new-chat-btn" (click)="newChat()">+ New Chat</button>
+    <h4>History</h4>
+    <div class="chat-history-item" *ngFor="let chat of chats" (click)="openChat(chat)">
+      <span>
+        {{ chat.title }}
+      </span>
+      <button class="delete-chat-btn" (click)="deleteChat(chat.id, $event)">🗑</button>
+    </div>
+  </div>
+  <!-- CHAT -->
+  <div class="chat-main">
+    <div class="chat-messages" #chatMessages>
+      <div
+        class="chat-message"
+        *ngFor="let msg of messages; let i = index"
+        [class.chat-message-user]="msg.role === 'user'"
+        [class.chat-message-error]="msg.error"
+      >
+        <!-- TEXT -->
+        <p *ngIf="msg.text">
+          {{ msg.text }}
+        </p>
+
+        <!-- EMERGENCY PLAN -->
+        <div class="plan-card" *ngIf="msg.plan as plan">
+          <div class="plan-facility shelter" *ngIf="plan.nearest_shelter as s">
+            <span class="plan-facility-icon">🏫</span>
+            <div>
+              <strong>{{ s.name }}</strong>
+              <span class="plan-distance">{{ s.distance_km }} km</span>
+              <small>Nearest shelter<ng-container *ngIf="s['phone']"> · tel {{ s['phone'] }}</ng-container></small>
+            </div>
+          </div>
+          <div class="plan-facility hospital" *ngIf="plan.nearest_hospital as h">
+            <span class="plan-facility-icon">🏥</span>
+            <div>
+              <strong>{{ h.name }}</strong>
+              <span class="plan-distance">{{ h.distance_km }} km</span>
+              <small>Nearest hospital<ng-container *ngIf="h['phone']"> · tel {{ h['phone'] }}</ng-container></small>
+            </div>
+          </div>
+
+          <ol class="plan-steps">
+            <li *ngFor="let step of plan.instructions">{{ step }}</li>
+          </ol>
+
+          <ul class="plan-warnings" *ngIf="plan.warnings.length">
+            <li *ngFor="let warning of plan.warnings">⚠ {{ warning }}</li>
+          </ul>
+
+          <p class="plan-contacts">☎ {{ plan.emergency_contacts.join(' · ') }}</p>
+
+          <button class="view-map-btn" type="button" *ngIf="msg.location" (click)="drawPlan(msg)">
+            🗺 Show on map
+          </button>
+        </div>
+
+        <!-- CLARIFICATION CHOICES -->
+        <div class="candidate-list" *ngIf="msg.candidates?.length">
+          <button
+            type="button"
+            class="candidate-btn"
+            *ngFor="let candidate of msg.candidates; let n = index"
+            [disabled]="loading || i !== messages.length - 1"
+            (click)="pickCandidate(candidate)"
+          >
+            {{ n + 1 }}. {{ candidate }}
+          </button>
+        </div>
+
+        <!-- AGENT TRACE -->
+        <button class="trace-toggle" type="button" *ngIf="msg.steps?.length" (click)="toggleTrace(i)">
+          {{ openTraceIndex === i ? '▾' : '▸' }} Agent trace ·
+          {{ msg.trace?.intent || 'n/a' }} · {{ msg.steps!.length }} steps
+        </button>
+        <div class="trace-panel" *ngIf="openTraceIndex === i">
+          <div class="trace-step" *ngFor="let step of msg.steps">
+            <h5>{{ nodeLabel(step.node) }}</h5>
+            <div class="trace-field" *ngFor="let field of fieldEntries(step)">
+              <span class="trace-key">{{ field.key }}</span>
+              <span class="trace-value" *ngIf="!isList(field.value)">{{ field.value }}</span>
+              <ul class="trace-list" *ngIf="isList(field.value)">
+                <li *ngFor="let line of field.value">{{ line }}</li>
+                <li *ngIf="!field.value.length">[]</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING: live agent progress -->
+      <div class="chat-message" *ngIf="loading">
+        <p class="chat-loading">Agents working...</p>
+        <ul class="live-steps">
+          <li *ngFor="let step of liveSteps">✓ {{ nodeLabel(step.node) }}</li>
+        </ul>
+      </div>
+    </div>
+    <!-- INPUT -->
+    <div class="chat-input-row">
+      <input
+        type="text"
+        [(ngModel)]="input"
+        (keydown.enter)="send()"
+        placeholder="Where are you, and what do you need?"
+        [disabled]="loading"
+      />
+      <button type="button" (click)="send()" [disabled]="loading">Send</button>
+    </div>
+  </div>
+</div>

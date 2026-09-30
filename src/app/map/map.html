@@ -1,0 +1,110 @@
+<!-- Coordinate Navigation Tool -->
+<div class="coordinate-control">
+
+  <button
+    class="coordinate-toggle"
+    type="button"
+    (click)="showCoordinates = !showCoordinates"
+    title="Search by coordinates"
+    aria-label="Search by coordinates">
+
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+
+      <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+
+    </svg>
+
+  </button>
+
+  <div
+    class="coordinate-panel"
+    *ngIf="showCoordinates">
+
+    <h4>Go to Coordinates</h4>
+
+    <label for="latitude">Latitude</label>
+
+    <input
+      #latitudeInput
+      id="latitude"
+      type="number"
+      placeholder="33.8938"
+      min="-90"
+      max="90"
+      step="0.0001"
+      (keydown.enter)="searchCoordinates()">
+
+    <label for="longitude">Longitude</label>
+
+    <input
+      #longitudeInput
+      id="longitude"
+      type="number"
+      placeholder="35.5018"
+      min="-180"
+      max="180"
+      step="0.0001"
+      (keydown.enter)="searchCoordinates()">
+
+    <p
+      class="coordinate-error"
+      *ngIf="coordinateError">
+      Enter a valid latitude and longitude.
+    </p>
+
+    <button
+      class="coordinate-go"
+      type="button"
+      (click)="searchCoordinates()">
+
+      Go
+
+    </button>
+
+  </div>
+
+</div>
+
+<!-- Facility Name Search -->
+<div class="building-search">
+
+  <input
+    type="text"
+    [(ngModel)]="facilityName"
+    placeholder="Find a shelter or hospital"
+    (keydown.enter)="searchFacilityByName()"
+  >
+
+  <button
+    type="button"
+    (click)="searchFacilityByName()"
+  >
+    Go
+  </button>
+
+</div>
+
+<!-- Facility Not Found Popup -->
+<div class="building-not-found-popup" *ngIf="facilityNotFound">
+  <div class="popup-content">
+    <p>No shelter or hospital named "{{ facilityName }}" was found.</p>
+    <button type="button" (click)="facilityNotFound = false">OK</button>
+  </div>
+</div>
+
+<!-- ArcGIS Map Container -->
+<div
+  #mapContainer
+  class="map-container"
+  role="region"
+  aria-label="3D map of shelters and hospitals in Lebanon">
+</div>

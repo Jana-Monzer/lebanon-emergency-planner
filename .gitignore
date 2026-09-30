@@ -1,0 +1,13 @@
+node_modules/
+.angular/
+dist/
+*.log
+emergency-planner/.venv/
+emergency-planner/__pycache__/
+**/__pycache__/
+*.pyc
+.env
+emergency-planner/.env
+emergency-planner/data/
+.DS_Store
+Thumbs.db

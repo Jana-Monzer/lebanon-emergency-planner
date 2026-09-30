@@ -1,0 +1,5 @@
+{
+  "schoolsLayerUrl": "https://services3.arcgis.com/tuNLpt6Wfhd22qmO/ArcGIS/rest/services/SchoolForEmergencyPlan_Map/FeatureServer/0",
+  "hospitalsLayerUrl": "https://services7.arcgis.com/WOCTeelWa8YfhXRF/ArcGIS/rest/services/Hospital_Labs/FeatureServer/0",
+  "chatApiUrl": "http://localhost:8000/api/chat"
+}

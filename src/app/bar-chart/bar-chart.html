@@ -1,0 +1,22 @@
+<div class="bar-chart" *ngIf="data.length; else empty">
+  <span class="bar-chart-prefix" *ngIf="labelPrefix">{{ labelPrefix }}</span>
+
+  <div class="bar-chart-track">
+    <div class="bar-column" *ngFor="let item of data">
+      <span class="bar-value">
+        {{ formatValue(item.value) }}
+        <span class="bar-unit" *ngIf="unit">{{ unit }}</span>
+      </span>
+      <div
+        class="bar"
+        [style.height.%]="barHeight(item.value)"
+        [style.background]="color"
+      ></div>
+      <span class="bar-label">{{ displayLabel(item.label) }}</span>
+    </div>
+  </div>
+</div>
+
+<ng-template #empty>
+  <p class="bar-chart-empty">{{ emptyMessage }}</p>
+</ng-template>

@@ -1,0 +1,427 @@
+<nav class="sidebar" [class.sidebar-closed]="!sidebarOpen">
+  <div class="sidebar-brand">
+    <span class="sidebar-brand-mark">ER</span>
+    <span class="sidebar-brand-text">
+      Emergency Response
+      <span>Lebanon Planning Console</span>
+    </span>
+  </div>
+
+  <button class="sidebar-toggle" type="button" (click)="toggleSidebar()">
+    {{ sidebarOpen ? '‹' : '›' }}
+  </button>
+
+  <div class="sidebar-nav">
+    <a class="sidebar-link"
+      [class.active]="activeSection === 'overview'"
+      href="#overview"
+      (click)="setActiveSection('overview')"
+    >
+      <span class="sidebar-link-icon">▦</span>
+      Overview
+    </a>
+
+    <a class="sidebar-link"
+      [class.active]="activeSection === 'scene'"
+      href="#scene"
+      (click)="setActiveSection('scene')"
+    >
+      <span class="sidebar-link-icon">◱</span>
+      3D Map & Filters
+    </a>
+
+    <a class="sidebar-link"
+      [class.active]="activeSection === 'analytics'"
+      href="#analytics"
+      (click)="setActiveSection('analytics')"
+    >
+      <span class="sidebar-link-icon">▤</span>
+      Analytics
+    </a>
+
+    <a class="sidebar-link"
+      [class.active]="activeSection === 'shelters'"
+      href="#shelters"
+      (click)="setActiveSection('shelters')"
+    >
+      <span class="sidebar-link-icon">⌂</span>
+      Shelter Schools
+    </a>
+
+    <a class="sidebar-link"
+      [class.active]="activeSection === 'hospitals'"
+      href="#hospitals"
+      (click)="setActiveSection('hospitals')"
+    >
+      <span class="sidebar-link-icon">✚</span>
+      Hospitals
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    Data source: ArcGIS Living Atlas
+    <br />
+    Schools (shelters) · Hospital_Labs
+
+    <button class="chat-toggle-btn" type="button" (click)="openChat()">💬 Emergency Assistant</button>
+  </div>
+</nav>
+
+<div class="main-content">
+  <header class="topbar" id="overview">
+    <div>
+      <p class="eyebrow">Lebanon emergency response</p>
+      <h1>Emergency Planner Dashboard</h1>
+      <p class="topbar-description">
+        Shelter-designated schools and hospitals across Lebanon, with a multi-agent assistant that builds an
+        emergency plan for any location.
+      </p>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="data-status">
+        <span class="status-dot"></span>
+        {{ dataError ? 'Layer loading failed' : dataLoading ? 'Loading layers…' : 'ArcGIS Online Data' }}
+      </span>
+
+      <button class="primary-button" type="button" (click)="openChat()">💬 Ask assistant</button>
+
+      <button class="primary-button" type="button" (click)="toggleFilters()">
+        {{ filtersOpen ? 'Hide filters' : 'Show filters' }}
+      </button>
+    </div>
+  </header>
+
+  <section class="statistics-grid" [class.stats-loading]="dataLoading">
+    <article class="metric-card">
+      <div class="metric-icon">01</div>
+      <div>
+        <p class="metric-label">Shelter schools</p>
+        <p class="metric-value">{{ filteredShelters.length }}</p>
+        <p class="metric-note">Designated as shelters</p>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon">02</div>
+      <div>
+        <p class="metric-label">Hospitals</p>
+        <p class="metric-value">{{ filteredHospitals.length }}</p>
+        <p class="metric-note">Excluding standalone labs</p>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon">03</div>
+      <div>
+        <p class="metric-label">Public hospitals</p>
+        <p class="metric-value">{{ publicHospitalCount }}</p>
+        <p class="metric-note">Governmental facilities</p>
+      </div>
+    </article>
+
+    <article class="metric-card">
+      <div class="metric-icon">04</div>
+      <div>
+        <p class="metric-label">With blood bank</p>
+        <p class="metric-value">{{ bloodBankCount }}</p>
+        <p class="metric-note">Hospitals reporting one</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== WORKSPACE ===================== -->
+  <section class="workspace" id="scene" [class.workspace-full]="!filtersOpen">
+    <!-- ===================== MAP ===================== -->
+    <article class="dashboard-card map-card">
+      <div class="card-header">
+        <div>
+          <h2>3D Emergency Map</h2>
+          <p>Shelters (green squares) and hospitals (red crosses) from live ArcGIS FeatureServers</p>
+        </div>
+        <span class="section-badge">Lebanon</span>
+      </div>
+
+      <div class="map-wrapper" #mapSection>
+        <app-map></app-map>
+      </div>
+    </article>
+
+    <!-- ===================== FILTERS ===================== -->
+    <aside class="dashboard-card filters-panel" *ngIf="filtersOpen">
+      <div class="filter-header">
+        <div>
+          <h2>Facility Filters</h2>
+          <p>{{ filteredShelters.length }} shelters · {{ filteredHospitals.length }} hospitals</p>
+        </div>
+        <button class="filter-close" type="button" (click)="toggleFilters()">×</button>
+      </div>
+
+      <div class="filters-content">
+        <div class="filter-field">
+          <label>Search name or area</label>
+          <input
+            type="search"
+            [(ngModel)]="searchText"
+            (ngModelChange)="onFiltersChanged()"
+            placeholder="e.g. Achrafieh, Hotel Dieu"
+          />
+        </div>
+
+        <div class="filter-field">
+          <label>Governorate</label>
+          <select [(ngModel)]="governorate" (ngModelChange)="onFiltersChanged()">
+            <option [ngValue]="null">All governorates</option>
+            <option *ngFor="let g of governorates" [ngValue]="g">{{ g }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Hospital ownership</label>
+          <select [(ngModel)]="ownership" (ngModelChange)="onFiltersChanged()">
+            <option [ngValue]="null">Public and private</option>
+            <option ngValue="Public">Public</option>
+            <option ngValue="Private">Private</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Hospital services</label>
+          <label class="filter-check">
+            <input type="checkbox" [(ngModel)]="bloodBankOnly" (ngModelChange)="onFiltersChanged()" />
+            Blood bank
+          </label>
+          <label class="filter-check">
+            <input type="checkbox" [(ngModel)]="radiologyOnly" (ngModelChange)="onFiltersChanged()" />
+            Radiology
+          </label>
+        </div>
+
+        <button class="clear-button" type="button" (click)="clearFilters()">
+          Clear all filters
+        </button>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ===================== ANALYTICS ===================== -->
+  <section class="analytics-grid" id="analytics">
+    <article
+      class="dashboard-card expandable-card"
+      [attr.aria-expanded]="showSheltersByGovernorate"
+      (click)="showSheltersByGovernorate = !showSheltersByGovernorate"
+    >
+      <div class="card-header">
+        <h2>Shelters by Governorate</h2>
+        <span class="chevron">▾</span>
+      </div>
+
+      <div class="chart-content" *ngIf="showSheltersByGovernorate">
+        <app-bar-chart [data]="sheltersByGovernorate" unit="shelters" color="#228b5e"></app-bar-chart>
+      </div>
+    </article>
+
+    <article
+      class="dashboard-card expandable-card"
+      [attr.aria-expanded]="showHospitalsByGovernorate"
+      (click)="showHospitalsByGovernorate = !showHospitalsByGovernorate"
+    >
+      <div class="card-header">
+        <h2>Hospitals by Governorate</h2>
+        <span class="chevron">▾</span>
+      </div>
+
+      <div class="chart-content" *ngIf="showHospitalsByGovernorate">
+        <app-bar-chart [data]="hospitalsByGovernorate" unit="hospitals" color="#d63031"></app-bar-chart>
+      </div>
+    </article>
+
+    <article
+      class="dashboard-card expandable-card"
+      [attr.aria-expanded]="showHospitalServices"
+      (click)="showHospitalServices = !showHospitalServices"
+    >
+      <div class="card-header">
+        <h2>Hospital Capabilities</h2>
+        <span class="chevron">▾</span>
+      </div>
+
+      <div class="chart-content" *ngIf="showHospitalServices">
+        <app-bar-chart [data]="hospitalServices" unit="hospitals"></app-bar-chart>
+        <p>The layer has no emergency-room field; these are the services it reports.</p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ===================== SHELTER RECORDS ===================== -->
+  <section class="dashboard-card table-card" id="shelters" [attr.aria-expanded]="showShelterRecords">
+    <div class="card-header clickable" (click)="showShelterRecords = !showShelterRecords">
+      <h2>Shelter School Records</h2>
+      <span class="chevron">▾</span>
+    </div>
+
+    <div class="table-wrapper" *ngIf="showShelterRecords">
+      <!-- PAGINATION + SORTING -->
+      <div class="table-toolbar">
+        <div class="table-toolbar-info">
+          <span>Page {{ shelterPage }} of {{ shelterTotalPages }} · {{ filteredShelters.length }} total</span>
+        </div>
+
+        <div class="table-toolbar-controls">
+          <label>
+            Sort by
+            <select [ngModel]="shelterSortField" (ngModelChange)="setShelterSortField($event)">
+              <option [ngValue]="null">Default</option>
+              <option *ngFor="let opt of shelterSortOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </label>
+
+          <button type="button" (click)="toggleShelterSortDirection()" [disabled]="!shelterSortField">
+            {{ shelterSortDirection === 'ASC' ? '↑ Ascending' : '↓ Descending' }}
+          </button>
+
+          <label>
+            Rows per page
+            <select [ngModel]="shelterPageSize" (ngModelChange)="changeShelterPageSize(+$event)">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </label>
+
+          <button type="button" (click)="goToShelterPage(shelterPage - 1)" [disabled]="shelterPage <= 1">‹ Prev</button>
+          <button type="button" (click)="goToShelterPage(shelterPage + 1)" [disabled]="shelterPage >= shelterTotalPages">
+            Next ›
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>School</th>
+            <th>Area</th>
+            <th>District</th>
+            <th>Governorate</th>
+            <th>Classes</th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let shelter of pagedShelters"
+            (click)="selectedId = 's' + shelter.id"
+            [class.selected-row]="selectedId === 's' + shelter.id"
+          >
+            <td>{{ shelter.name }}</td>
+            <td>{{ shelter.cadastral ?? '—' }}</td>
+            <td>{{ shelter.caza ?? '—' }}</td>
+            <td>{{ shelter.governorate ?? '—' }}</td>
+            <td>{{ shelter.classes ?? '—' }}</td>
+            <td>{{ shelter.phone ?? '—' }}</td>
+            <td>
+              <button type="button" class="zoom-button" (click)="zoomToShelter(shelter); $event.stopPropagation()">
+                ⌕ Zoom
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!dataLoading && pagedShelters.length === 0">
+            <td colspan="7">No shelters match the current filters.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== HOSPITAL RECORDS ===================== -->
+  <section class="dashboard-card table-card" id="hospitals" [attr.aria-expanded]="showHospitalRecords">
+    <div class="card-header clickable" (click)="showHospitalRecords = !showHospitalRecords">
+      <h2>Hospital Records</h2>
+      <span class="chevron">▾</span>
+    </div>
+
+    <div class="table-wrapper" *ngIf="showHospitalRecords">
+      <!-- PAGINATION + SORTING -->
+      <div class="table-toolbar">
+        <div class="table-toolbar-info">
+          <span>Page {{ hospitalPage }} of {{ hospitalTotalPages }} · {{ filteredHospitals.length }} total</span>
+        </div>
+
+        <div class="table-toolbar-controls">
+          <label>
+            Sort by
+            <select [ngModel]="hospitalSortField" (ngModelChange)="setHospitalSortField($event)">
+              <option [ngValue]="null">Default</option>
+              <option *ngFor="let opt of hospitalSortOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </label>
+
+          <button type="button" (click)="toggleHospitalSortDirection()" [disabled]="!hospitalSortField">
+            {{ hospitalSortDirection === 'ASC' ? '↑ Ascending' : '↓ Descending' }}
+          </button>
+
+          <label>
+            Rows per page
+            <select [ngModel]="hospitalPageSize" (ngModelChange)="changeHospitalPageSize(+$event)">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </label>
+
+          <button type="button" (click)="goToHospitalPage(hospitalPage - 1)" [disabled]="hospitalPage <= 1">‹ Prev</button>
+          <button type="button" (click)="goToHospitalPage(hospitalPage + 1)" [disabled]="hospitalPage >= hospitalTotalPages">
+            Next ›
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Hospital</th>
+            <th>District</th>
+            <th>Governorate</th>
+            <th>Ownership</th>
+            <th>Blood bank</th>
+            <th>Radiology</th>
+            <th>Phone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let hospital of pagedHospitals"
+            (click)="selectedId = 'h' + hospital.id"
+            [class.selected-row]="selectedId === 'h' + hospital.id"
+          >
+            <td>{{ hospital.name }}</td>
+            <td>{{ hospital.district ?? '—' }}</td>
+            <td>{{ hospital.governorate ?? '—' }}</td>
+            <td>{{ hospital.ownership ?? '—' }}</td>
+            <td>{{ yesNo(hospital.bloodBank) }}</td>
+            <td>{{ yesNo(hospital.radiology) }}</td>
+            <td>{{ hospital.phone ?? '—' }}</td>
+            <td>
+              <button type="button" class="zoom-button" (click)="zoomToHospital(hospital); $event.stopPropagation()">
+                ⌕ Zoom
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!dataLoading && pagedHospitals.length === 0">
+            <td colspan="8">No hospitals match the current filters.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="chat-panel" *ngIf="chatOpen">
+  <div class="chat-window">
+    <button class="chat-close-btn" type="button" (click)="closeChat()">✕</button>
+
+    <app-chat (showPlan)="showPlanOnMap($event)"></app-chat>
+  </div>
+</div>

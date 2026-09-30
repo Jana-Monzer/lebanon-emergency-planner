@@ -1,0 +1,89 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.bar-chart-prefix {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #98a4b5;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.bar-chart-track {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 190px;
+  padding: 14px 4px 0;
+  border-bottom: 1px solid #e2e8f0;
+  background-image: repeating-linear-gradient(
+    to top,
+    #eef2f6 0,
+    #eef2f6 1px,
+    transparent 1px,
+    transparent 25%
+  );
+}
+
+.bar-column {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bar-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #42536b;
+  margin-bottom: 6px;
+  text-align: center;
+
+  max-width: 65px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+
+.bar-unit {
+  font-size: 10px;
+  font-weight: 500;
+  color: #98a4b5;
+  margin-top: 2px;
+}
+
+.bar {
+  width: 100%;
+  max-width: 40px;
+  min-height: 3px;
+  border-radius: 6px 6px 2px 2px;
+  transition: height 0.4s ease;
+}
+.bar-label {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #788597;
+  text-align: center;
+
+  max-width: 65px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+.bar-chart-empty {
+  padding: 28px 0;
+  text-align: center;
+  color: #98a4b5;
+  font-size: 13px;
+}
